@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企業システム用語 4択クイズ</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- ヘッダー -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-laptop-code text-blue-600 mr-3"></i>
+                    企業システム用語クイズ
+                </h1>
+                <p class="text-lg text-gray-600">企業資源管理とシステム化に関する用語を学習しましょう</p>
+            </div>
+
+            <!-- スコア表示 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center">
+                    <div class="text-lg font-semibold text-gray-700">
+                        問題 <span id="currentQuestion">1</span> / <span id="totalQuestions">20</span>
+                    </div>
+                    <div class="text-lg font-semibold text-gray-700">
+                        正解数: <span id="score" class="text-green-600">0</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
+                    <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+            </div>
+
+            <!-- クイズエリア -->
+            <div id="quizArea" class="bg-white rounded-lg shadow-lg p-8">
+                <h2 id="questionTitle" class="text-2xl font-bold text-gray-800 mb-6"></h2>
+                <div id="choices" class="space-y-4"></div>
+                <div id="explanation" class="mt-6 p-4 rounded-lg hidden"></div>
+                <button id="nextButton" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 hidden">
+                    次の問題へ <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- 結果画面 -->
+            <div id="resultArea" class="bg-white rounded-lg shadow-lg p-8 text-center hidden">
+                <div id="resultIcon" class="text-6xl mb-4"></div>
+                <h2 id="resultTitle" class="text-3xl font-bold mb-4"></h2>
+                <p id="resultMessage" class="text-xl text-gray-600 mb-6"></p>
+                <button id="restartButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    もう一度挑戦 <i class="fas fa-redo ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "企業資源とは何を指しますか？",
+                correct: "会社が管理する、在庫情報、従業員の勤務シフト、請求や支払情報、給与情報、顧客情報など、様々なもの",
+                choices: [
+                    "会社が管理する、在庫情報、従業員の勤務シフト、請求や支払情報、給与情報、顧客情報など、様々なもの",
+                    "会社が所有する建物や設備、機械などの物理的な資産のみ",
+                    "企業の財務状況を示す貸借対照表や損益計算書などの財務諸表",
+                    "企業の知的財産権や特許、商標などの無形資産のみ"
+                ],
+                explanation: "企業資源とは、会社が事業を運営するために管理する様々な情報や資源のことです。在庫、人事、財務、顧客情報など幅広い要素が含まれます。"
+            },
+            {
+                question: "システム化の目的として最も適切なものはどれですか？",
+                correct: "業務を効率的に管理するために、情報システムを導入すること",
+                choices: [
+                    "業務を効率的に管理するために、情報システムを導入すること",
+                    "全ての業務を人工知能に置き換えて人件費を削減すること",
+                    "競合他社よりも多くのコンピューターを導入すること",
+                    "紙の書類を全てスキャンしてデジタル化すること"
+                ],
+                explanation: "システム化とは、業務の効率化や正確性向上を目的として情報システムを導入することです。単なるデジタル化ではなく、業務プロセスの改善が重要です。"
+            },
+            {
+                question: "ERP（Enterprise Resource Planning）の特徴として正しいものはどれですか？",
+                correct: "ビジネスのさまざまな部分を統合的に連携させ、業務を効率的にするためのシステム",
+                choices: [
+                    "ビジネスのさまざまな部分を統合的に連携させ、業務を効率的にするためのシステム",
+                    "専用のハードウェアを使用して物理的なセキュリティを強化するシステム",
+                    "インターネット上でのみ動作するクラウド専用のアプリケーション",
+                    "財務部門のみで使用される会計専用のソフトウェア"
+                ],
+                explanation: "ERPは企業の様々な部門（財務、人事、製造、販売など）の業務を一つのシステムで統合管理し、データの一元化と業務効率化を実現します。"
+            },
+            {
+                question: "SCM（Supply Chain Management）が管理する対象はどれですか？",
+                correct: "サプライチェーンを管理するシステム",
+                choices: [
+                    "サプライチェーンを管理するシステム",
+                    "企業内のセキュリティ管理を行うシステム",
+                    "ソーシャルメディアでの顧客対応を管理するシステム",
+                    "従業員のスケジュール管理を行うシステム"
+                ],
+                explanation: "SCMはサプライチェーン（供給連鎖）全体を管理するシステムです。原材料調達から製造、配送、販売まで一連の流れを最適化します。"
+            },
+            {
+                question: "サプライチェーンとは何を指しますか？",
+                correct: "商品やサービスが産まれてから消費者に届くまでの流れ",
+                choices: [
+                    "商品やサービスが産まれてから消費者に届くまでの流れ",
+                    "企業内部での情報伝達のルートと手順",
+                    "顧客からの注文を受けてから請求書を発行するまでの過程",
+                    "新製品の企画から市場投入までの開発プロセス"
+                ],
+                explanation: "サプライチェーンは、原材料の調達から製造、流通、販売を経て最終消費者に商品が届くまでの一連の流れを指します。"
+            },
+            {
+                question: "CRM（Customer Relationship Management）の主な機能はどれですか？",
+                correct: "企業が顧客との関係を管理するためのシステム。顧客情報管理や問い合わせ管理などを行う",
+                choices: [
+                    "企業が顧客との関係を管理するためのシステム。顧客情報管理や問い合わせ管理などを行う",
+                    "企業の財務状況をリアルタイムで監視する会計システム",
+                    "従業員の勤怠管理と給与計算を自動化するシステム",
+                    "製品の在庫管理と発注を自動化する倉庫管理システム"
+                ],
+                explanation: "CRMは顧客との関係性を管理するシステムです。顧客情報の一元管理、営業活動の履歴、サポート対応などを通じて顧客満足度向上を図ります。"
+            },
+            {
+                question: "SFA（Sales Force Automation）の目的として正しいものはどれですか？",
+                correct: "企業の営業活動を自動化し、管理するためのソフトウェアやツール",
+                choices: [
+                    "企業の営業活動を自動化し、管理するためのソフトウェアやツール",
+                    "工場の製造ラインを自動化するためのロボット制御システム",
+                    "オフィスの照明や空調を自動制御するビル管理システム",
+                    "ウェブサイトのアクセス解析を自動で行うツール"
+                ],
+                explanation: "SFAは営業プロセスの自動化と効率化を目的としたツールです。営業活動の記録、案件管理、予実管理などにより営業チームの生産性を向上させます。"
+            },
+            {
+                question: "MAツール（Marketing Automation tool）の特徴として適切なものはどれですか？",
+                correct: "マーケティング活動を自動化するためのツール。マーケティング活動の自動化や効果測定を自動で行う",
+                choices: [
+                    "マーケティング活動を自動化するためのツール。マーケティング活動の自動化や効果測定を自動で行う",
+                    "製造業での機械のメンテナンス作業を自動化するツール",
+                    "会計処理の自動化を行う財務管理ツール",
+                    "社内の文書管理を自動化するファイル管理システム"
+                ],
+                explanation: "MAツールはマーケティング活動の自動化を行うツールです。メール配信、リード育成、効果測定などを自動化し、マーケティング効率を向上させます。"
+            },
+            {
+                question: "システム開発の一連の流れとして正しいものはどれですか？",
+                correct: "企画 → 要件定義 → 開発 → リリース → 保守・運用",
+                choices: [
+                    "企画 → 設計 → 要件定義 → 開発 → 保守・運用",
+                    "企画 → 要件定義 → 開発 → リリース → 保守・運用",
+                    "要件定義 → 企画 → 開発 → テスト → 保守・運用",
+                    "企画 → 開発 → 要件定義 → リリース → 保守・運用"
+                ],
+                explanation: "システム開発は「企画 → 要件定義 → 開発 → リリース → 保守・運用」の順序で進められます。"
+            },
+            {
+                question: "企画段階で行わないものはどれですか？",
+                correct: "システムのプログラムコードを記述する",
+                choices: [
+                    "システムが作られる目的を明確にする",
+                    "全体の開発スケジュールを作成する",
+                    "システムの費用対効果を算出する",
+                    "システムのプログラムコードを記述する"
+                ],
+                explanation: "プログラムコードの記述は開発段階で行われる作業であり、企画段階では行いません。"
+            },
+            {
+                question: "要件定義に関する説明として正しいものはどれですか？",
+                correct: "開発するシステムに必要な機能や性能を明確にする作業である",
+                choices: [
+                    "関係者の要望をそのまま全て取り入れるべきである",
+                    "システム開発の最終段階で行われる作業である",
+                    "開発するシステムに必要な機能や性能を明確にする作業である",
+                    "経営陣のみで決定すべき作業である"
+                ],
+                explanation: "要件定義は、システム開発の初期段階で開発するシステムに必要な機能や性能を明確にする作業です。"
+            },
+            {
+                question: "要件を記述する際の適切な形式はどれですか？",
+                correct: "客はメニューを選択して注文できる",
+                choices: [
+                    "メニュー機能が必要",
+                    "客はメニューを選択して注文できる",
+                    "注文システム",
+                    "便利な機能"
+                ],
+                explanation: "要件は「〇〇は△△できる」のような形で、主語とできることを明確にしておくのが良いとされています。"
+            },
+            {
+                question: "機能要件と非機能要件のうち、見落とされがちなのはどちらですか？",
+                correct: "非機能要件",
+                choices: [
+                    "機能要件",
+                    "非機能要件",
+                    "どちらも同程度",
+                    "システムによって異なる"
+                ],
+                explanation: "非機能要件は出てくることが少なく、見落とされがちです。要件定義時は非機能要件の洗い出しを意識する必要があります。"
+            },
+            {
+                question: "IPAが定義する非機能要件のカテゴリ数はいくつですか？",
+                correct: "6つ",
+                choices: [
+                    "4つ",
+                    "5つ",
+                    "6つ",
+                    "8つ"
+                ],
+                explanation: "IPAでは非機能要件を6つのカテゴリで定義しています。"
+            },
+            {
+                question: "「可用性」の非機能要件に含まれないものはどれですか？",
+                correct: "システムの処理速度",
+                choices: [
+                    "システムの最低稼働時間",
+                    "冗長化対策",
+                    "バックアップなどの災害対策",
+                    "システムの処理速度"
+                ],
+                explanation: "システムの処理速度は「性能・拡張性」の非機能要件に含まれます。可用性は継続的な利用可能性に関する要件です。"
+            },
+            {
+                question: "「性能・拡張性」の非機能要件に含まれるものはどれですか？",
+                correct: "業務量の増大に伴うサーバの追加",
+                choices: [
+                    "個人情報の保護",
+                    "データ移行のやり方",
+                    "業務量の増大に伴うサーバの追加",
+                    "システムの設置環境"
+                ],
+                explanation: "性能・拡張性には、処理速度や処理量などの性能と、業務量の増大に伴うサーバの追加や縮小に伴う撤去などが含まれます。"
+            },
+            {
+                question: "「移行性」の非機能要件として適切でないものはどれですか？",
+                correct: "不正アクセス対策",
+                choices: [
+                    "データ移行のやり方",
+                    "一括移行か段階的移行かの検討",
+                    "移行スケジュールの策定",
+                    "不正アクセス対策"
+                ],
+                explanation: "不正アクセス対策は「セキュリティ」の非機能要件に含まれます。移行性は既存システムから新システムへのスムーズな移行に関する要件です。"
+            },
+            {
+                question: "セキュリティの非機能要件に含まれないものはどれですか？",
+                correct: "環境保全への配慮",
+                choices: [
+                    "不正アクセス対策",
+                    "利用者制限による権限の最小化",
+                    "個人情報の保護",
+                    "環境保全への配慮"
+                ],
+                explanation: "環境保全への配慮は「システム環境・エコロジー」の非機能要件に含まれます。"
+            },
+            {
+                question: "システム開発において、関係者の要望に対する適切な対応はどれですか？",
+                correct: "要望を精査し、ビジネス上の差別化要因となるものは採用を検討する",
+                choices: [
+                    "全ての要望を必ず実装する",
+                    "経営陣の要望のみを採用する",
+                    "要望を精査し、ビジネス上の差別化要因となるものは採用を検討する",
+                    "技術的に簡単な要望のみを採用する"
+                ],
+                explanation: "関係者の要望をそのまま聞くのではなく、一見不要と思われる機能もビジネスとして差別化要因になるものは採用されることがあります。"
+            },
+            {
+                question: "「運用・保守性」の非機能要件に関する説明として正しいものはどれですか？",
+                correct: "システム稼働後の運用の流れや機能の追加・変更に関することを検討する",
+                choices: [
+                    "システムは作って終わりなので考慮不要である",
+                    "システム稼働後の運用の流れや機能の追加・変更に関することを検討する",
+                    "主にハードウェアの保守のみを考慮すればよい",
+                    "開発完了後に検討すればよい"
+                ],
+                explanation: "システムは作って終わりではなく、何年、何十年と運用していく必要があるため、システム稼働後の運用の流れや機能の追加・変更も要件定義で検討しておく必要があります。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startQuiz() {
+            shuffledQuestions = shuffleArray(questions);
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('currentQuestion').textContent = 1;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('quizArea').classList.remove('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('questionTitle').textContent = question.question;
+            
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+            
+            const shuffledChoices = shuffleArray(question.choices);
+            
+            shuffledChoices.forEach((choice, index) => {
+                const choiceButton = document.createElement('button');
+                choiceButton.className = 'w-full text-left p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition duration-300 hover:shadow-md';
+                choiceButton.innerHTML = `
+                    <span class="font-semibold text-blue-600 mr-3">${String.fromCharCode(65 + index)}</span>
+                    ${choice}
+                `;
+                choiceButton.onclick = () => selectAnswer(choice, question.correct, question.explanation);
+                choicesContainer.appendChild(choiceButton);
+            });
+
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('nextButton').classList.add('hidden');
+            
+            // プログレスバー更新
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+        }
+
+        function selectAnswer(selectedAnswer, correctAnswer, explanation) {
+            const isCorrect = selectedAnswer === correctAnswer;
+            
+            // ボタンを無効化
+            const buttons = document.querySelectorAll('#choices button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.classList.remove('hover:bg-gray-100', 'hover:shadow-md');
+                
+                if (button.textContent.slice(2) === correctAnswer) {
+                    button.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    button.innerHTML = '<i class="fas fa-check text-green-600 mr-2"></i>' + button.innerHTML;
+                } else if (button.textContent.slice(2) === selectedAnswer && !isCorrect) {
+                    button.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                    button.innerHTML = '<i class="fas fa-times text-red-600 mr-2"></i>' + button.innerHTML;
+                } else {
+                    button.classList.add('opacity-50');
+                }
+            });
+
+            // スコア更新
+            if (isCorrect) {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+
+            // 解説表示
+            const explanationDiv = document.getElementById('explanation');
+            explanationDiv.className = `mt-6 p-4 rounded-lg ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`;
+            explanationDiv.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas ${isCorrect ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} text-xl mr-3 mt-1"></i>
+                    <div>
+                        <h3 class="font-bold text-lg ${isCorrect ? 'text-green-800' : 'text-red-800'} mb-2">
+                            ${isCorrect ? '正解です！' : '不正解です'}
+                        </h3>
+                        <p class="text-gray-700">${explanation}</p>
+                    </div>
+                </div>
+            `;
+            explanationDiv.classList.remove('hidden');
+
+            // 次へボタン表示
+            document.getElementById('nextButton').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quizArea').classList.add('hidden');
+            document.getElementById('resultArea').classList.remove('hidden');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            if (percentage >= 80) {
+                resultIcon.innerHTML = '<i class="fas fa-trophy text-yellow-500"></i>';
+                resultTitle.textContent = '素晴らしい！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-yellow-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 企業システム用語をよく理解していますね！`;
+            } else if (percentage >= 60) {
+                resultIcon.innerHTML = '<i class="fas fa-medal text-blue-500"></i>';
+                resultTitle.textContent = 'よくできました！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-blue-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- もう少し学習すればさらに向上できます！`;
+            } else {
+                resultIcon.innerHTML = '<i class="fas fa-book text-gray-500"></i>';
+                resultTitle.textContent = '復習しましょう！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-gray-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 企業システム用語をもう一度復習してみましょう。`;
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('nextButton').onclick = nextQuestion;
+        document.getElementById('restartButton').onclick = startQuiz;
+
+        // クイズ開始
+        startQuiz();
+    </script>
+</body>
+</html>
