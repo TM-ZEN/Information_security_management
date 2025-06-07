@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情報セキュリティ概論 4択クイズ</title>
+    <title>情報セキュリティ概論用語 4択クイズ</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
 </head>
@@ -14,7 +14,7 @@
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-laptop-code text-blue-600 mr-3"></i>
-                    情報セキュリティ概論クイズ
+                    情報セキュリティ概論システム用語クイズ
                 </h1>
                 <p class="text-lg text-gray-600">情報セキュリティ概論に関する用語を学習しましょう</p>
             </div>
@@ -75,6 +75,7 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let shuffledQuestions = [];
+        let usedQuestions = new Set(); // 使用済み問題のインデックスを記録
 
         // JSONファイルから問題を読み込む
         async function loadQuestions() {
@@ -117,9 +118,19 @@
         }
 
         function startQuiz() {
-            shuffledQuestions = shuffleArray(questions);
+            // 全問題を使い切った場合はリセット
+            if (usedQuestions.size >= questions.length) {
+                usedQuestions.clear();
+            }
+            
             currentQuestionIndex = 0;
             score = 0;
+            
+            // 使用可能な問題をフィルタリング
+            const availableQuestions = questions.filter((_, index) => !usedQuestions.has(index));
+            
+            // 使用可能な問題をシャッフル
+            shuffledQuestions = shuffleArray(availableQuestions);
             
             // UI要素の表示/非表示
             document.getElementById('errorArea').classList.add('hidden');
@@ -130,7 +141,7 @@
             // スコア表示の初期化
             document.getElementById('score').textContent = score;
             document.getElementById('currentQuestion').textContent = 1;
-            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('totalQuestions').textContent = shuffledQuestions.length;
             
             showQuestion();
         }
@@ -159,7 +170,7 @@
             document.getElementById('nextButton').classList.add('hidden');
             
             // プログレスバー更新
-            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            const progress = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
             document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
         }
@@ -211,8 +222,13 @@
         }
 
         function nextQuestion() {
+            // 現在の問題を使用済みとしてマーク
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const originalIndex = questions.findIndex(q => q.question === currentQuestion.question);
+            usedQuestions.add(originalIndex);
+            
             currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
+            if (currentQuestionIndex < shuffledQuestions.length) {
                 showQuestion();
             } else {
                 showResult();
@@ -224,26 +240,29 @@
             document.getElementById('scoreArea').classList.add('hidden');
             document.getElementById('resultArea').classList.remove('hidden');
             
-            const percentage = Math.round((score / questions.length) * 100);
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
             const resultIcon = document.getElementById('resultIcon');
             const resultTitle = document.getElementById('resultTitle');
             const resultMessage = document.getElementById('resultMessage');
+            
+            // 残り問題数の計算
+            const remainingQuestions = questions.length - usedQuestions.size;
             
             if (percentage >= 80) {
                 resultIcon.innerHTML = '<i class="fas fa-trophy text-yellow-500"></i>';
                 resultTitle.textContent = '素晴らしい！';
                 resultTitle.className = 'text-3xl font-bold mb-4 text-yellow-600';
-                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 情報セキュリティ概論の用語をよく理解していますね！`;
+                resultMessage.innerHTML = `${score}/${shuffledQuestions.length}問正解（${percentage}%）<br>情報セキュリティ概論の用語をよく理解していますね！<br><small class="text-gray-500">残り問題数: ${remainingQuestions}問</small>`;
             } else if (percentage >= 60) {
                 resultIcon.innerHTML = '<i class="fas fa-medal text-blue-500"></i>';
                 resultTitle.textContent = 'よくできました！';
                 resultTitle.className = 'text-3xl font-bold mb-4 text-blue-600';
-                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- もう少し学習すればさらに向上できます！`;
+                resultMessage.innerHTML = `${score}/${shuffledQuestions.length}問正解（${percentage}%）<br>もう少し学習すればさらに向上できます！<br><small class="text-gray-500">残り問題数: ${remainingQuestions}問</small>`;
             } else {
                 resultIcon.innerHTML = '<i class="fas fa-book text-gray-500"></i>';
                 resultTitle.textContent = '復習しましょう！';
                 resultTitle.className = 'text-3xl font-bold mb-4 text-gray-600';
-                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 情報セキュリティ概論の用語をもう一度復習してみましょう。`;
+                resultMessage.innerHTML = `${score}/${shuffledQuestions.length}問正解（${percentage}%）<br>情報セキュリティ概論の用語をもう一度復習してみましょう。<br><small class="text-gray-500">残り問題数: ${remainingQuestions}問</small>`;
             }
         }
 
