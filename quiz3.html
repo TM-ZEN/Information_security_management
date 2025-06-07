@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企業システム用語 4択クイズ</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- ヘッダー -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-laptop-code text-blue-600 mr-3"></i>
+                    企業システム用語クイズ
+                </h1>
+                <p class="text-lg text-gray-600">企業資源管理とシステム化に関する用語を学習しましょう</p>
+            </div>
+
+            <!-- ローディング表示 -->
+            <div id="loadingArea" class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                <p class="text-lg text-gray-600">問題を読み込み中...</p>
+            </div>
+
+            <!-- エラー表示 -->
+            <div id="errorArea" class="bg-white rounded-lg shadow-lg p-8 text-center hidden">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-red-600 mb-4">エラーが発生しました</h2>
+                <p class="text-lg text-gray-600 mb-4">問題ファイルの読み込みに失敗しました。</p>
+                <p class="text-sm text-gray-500">questions.jsonファイルが同じフォルダにあることを確認してください。</p>
+            </div>
+
+            <!-- スコア表示 -->
+            <div id="scoreArea" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+                <div class="flex justify-between items-center">
+                    <div class="text-lg font-semibold text-gray-700">
+                        問題 <span id="currentQuestion">1</span> / <span id="totalQuestions">0</span>
+                    </div>
+                    <div class="text-lg font-semibold text-gray-700">
+                        正解数: <span id="score" class="text-green-600">0</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
+                    <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- クイズエリア -->
+            <div id="quizArea" class="bg-white rounded-lg shadow-lg p-8 hidden">
+                <h2 id="questionTitle" class="text-2xl font-bold text-gray-800 mb-6"></h2>
+                <div id="choices" class="space-y-4"></div>
+                <div id="explanation" class="mt-6 p-4 rounded-lg hidden"></div>
+                <button id="nextButton" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 hidden">
+                    次の問題へ <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- 結果画面 -->
+            <div id="resultArea" class="bg-white rounded-lg shadow-lg p-8 text-center hidden">
+                <div id="resultIcon" class="text-6xl mb-4"></div>
+                <h2 id="resultTitle" class="text-3xl font-bold mb-4"></h2>
+                <p id="resultMessage" class="text-xl text-gray-600 mb-6"></p>
+                <button id="restartButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    もう一度挑戦 <i class="fas fa-redo ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+
+        // JSONファイルから問題を読み込む
+        async function loadQuestions() {
+            try {
+                const response = await fetch('questions.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                questions = await response.json();
+                
+                // 問題が読み込めたらクイズを開始
+                if (questions && questions.length > 0) {
+                    hideLoading();
+                    startQuiz();
+                } else {
+                    throw new Error('問題データが空です');
+                }
+            } catch (error) {
+                console.error('問題の読み込みに失敗:', error);
+                showError();
+            }
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingArea').classList.add('hidden');
+        }
+
+        function showError() {
+            document.getElementById('loadingArea').classList.add('hidden');
+            document.getElementById('errorArea').classList.remove('hidden');
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startQuiz() {
+            shuffledQuestions = shuffleArray(questions);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // UI要素の表示/非表示
+            document.getElementById('errorArea').classList.add('hidden');
+            document.getElementById('scoreArea').classList.remove('hidden');
+            document.getElementById('quizArea').classList.remove('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+            
+            // スコア表示の初期化
+            document.getElementById('score').textContent = score;
+            document.getElementById('currentQuestion').textContent = 1;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('questionTitle').textContent = question.question;
+            
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+            
+            const shuffledChoices = shuffleArray(question.choices);
+            
+            shuffledChoices.forEach((choice, index) => {
+                const choiceButton = document.createElement('button');
+                choiceButton.className = 'w-full text-left p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition duration-300 hover:shadow-md';
+                choiceButton.innerHTML = `
+                    <span class="font-semibold text-blue-600 mr-3">${String.fromCharCode(65 + index)}</span>
+                    ${choice}
+                `;
+                choiceButton.onclick = () => selectAnswer(choice, question.correct, question.explanation);
+                choicesContainer.appendChild(choiceButton);
+            });
+
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('nextButton').classList.add('hidden');
+            
+            // プログレスバー更新
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+        }
+
+        function selectAnswer(selectedAnswer, correctAnswer, explanation) {
+            const isCorrect = selectedAnswer === correctAnswer;
+            
+            // ボタンを無効化
+            const buttons = document.querySelectorAll('#choices button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.classList.remove('hover:bg-gray-100', 'hover:shadow-md');
+                
+                if (button.textContent.slice(2) === correctAnswer) {
+                    button.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    button.innerHTML = '<i class="fas fa-check text-green-600 mr-2"></i>' + button.innerHTML;
+                } else if (button.textContent.slice(2) === selectedAnswer && !isCorrect) {
+                    button.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                    button.innerHTML = '<i class="fas fa-times text-red-600 mr-2"></i>' + button.innerHTML;
+                } else {
+                    button.classList.add('opacity-50');
+                }
+            });
+
+            // スコア更新
+            if (isCorrect) {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+
+            // 解説表示
+            const explanationDiv = document.getElementById('explanation');
+            explanationDiv.className = `mt-6 p-4 rounded-lg ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`;
+            explanationDiv.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas ${isCorrect ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} text-xl mr-3 mt-1"></i>
+                    <div>
+                        <h3 class="font-bold text-lg ${isCorrect ? 'text-green-800' : 'text-red-800'} mb-2">
+                            ${isCorrect ? '正解です！' : '不正解です'}
+                        </h3>
+                        <p class="text-gray-700">${explanation}</p>
+                    </div>
+                </div>
+            `;
+            explanationDiv.classList.remove('hidden');
+
+            // 次へボタン表示
+            document.getElementById('nextButton').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quizArea').classList.add('hidden');
+            document.getElementById('scoreArea').classList.add('hidden');
+            document.getElementById('resultArea').classList.remove('hidden');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            if (percentage >= 80) {
+                resultIcon.innerHTML = '<i class="fas fa-trophy text-yellow-500"></i>';
+                resultTitle.textContent = '素晴らしい！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-yellow-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 企業システム用語をよく理解していますね！`;
+            } else if (percentage >= 60) {
+                resultIcon.innerHTML = '<i class="fas fa-medal text-blue-500"></i>';
+                resultTitle.textContent = 'よくできました！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-blue-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- もう少し学習すればさらに向上できます！`;
+            } else {
+                resultIcon.innerHTML = '<i class="fas fa-book text-gray-500"></i>';
+                resultTitle.textContent = '復習しましょう！';
+                resultTitle.className = 'text-3xl font-bold mb-4 text-gray-600';
+                resultMessage.textContent = `${score}/${questions.length}問正解（${percentage}%）- 企業システム用語をもう一度復習してみましょう。`;
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('nextButton').onclick = nextQuestion;
+        document.getElementById('restartButton').onclick = startQuiz;
+
+        // ページ読み込み時に問題を読み込む
+        window.addEventListener('DOMContentLoaded', loadQuestions);
+    </script>
+</body>
+</html>
